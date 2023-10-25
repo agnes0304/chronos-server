@@ -3,7 +3,6 @@
 
 import json
 from konlpy.tag import Okt
-from collections import Counter
 
 with open('./data/ocr.json', encoding='utf-8') as data_file:
     data = json.load(data_file)
@@ -11,8 +10,6 @@ with open('./data/ocr.json', encoding='utf-8') as data_file:
 words = []
 for i in range(len(data["words"])):
     words.append(data["words"][i]["text"])
-# print(words) # words list printed!
-
 
 ### Tokenize RULEs
 ### 1. remove stopwords -> OK
@@ -22,7 +19,6 @@ for i in range(len(data["words"])):
 ### 5. remove duplicated words
 ### 6. remove empty lists -> OK
 ### 7. remove words with length less then 2 -> OK
-
 
 # tokenize the json file
 okt = Okt()
