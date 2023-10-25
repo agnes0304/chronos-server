@@ -1,2 +1,2 @@
 # chronos-server
-python, flask
+Chronos server 입니다.
