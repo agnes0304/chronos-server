@@ -68,4 +68,3 @@ def generate_presigned_url(bucket_name, object_name, expiration=3600):
 bucket = os.getenv("S3_BUCKET")
 object_name = "path/to/your/file.jpg"
 url = generate_presigned_url(bucket, object_name)
-print(url)
