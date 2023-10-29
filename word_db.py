@@ -1,8 +1,16 @@
 from app import get_db_connection
-from tokenizer import filter_words
 from konlpy.tag import Komoran
 import json
 import os
+
+def filter_words(word_list, stopwords, punctuation):
+    return [
+        word for word in word_list 
+        if word not in stopwords 
+        and word not in punctuation 
+        and not word.isdigit()
+        # and len(word) > 1
+    ]
 
 def add_words_to_db(file_name):
     # Load JSON data from the data folder
@@ -18,7 +26,7 @@ def add_words_to_db(file_name):
     '때', '더', '그', '이', '수', '등', '등등', '때문', 
     '때문에', '위', '바로', '좀', '분', '씨', '제', '그것', 
     '이것', '저것', '의', '에도', '위해', '인의'
-]
+    ]
 
     punctuation = [
     '.', ',', '!', '?', '(', ')', '[', ']', '{', '}', ':', 
@@ -26,7 +34,7 @@ def add_words_to_db(file_name):
     '$', '%', '^', '&', '|', '\\', '「', '」', '→', '),', 
     ')=', '《', '》', '>', '·', 'X', '↑→', '↑', '):', '->', 
     ')+', ':(', "'", 'x'
-]   
+    ]   
 
     tokenizer = Komoran()
     tokenized = [
