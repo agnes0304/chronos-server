@@ -17,54 +17,42 @@ DATABASE_CONFIG = {
     "port": os.getenv("DB_PORT")
 }
 
-
 def get_db_connection():
+    """Get a new database connection based on the configuration."""
     return psycopg2.connect(**DATABASE_CONFIG)
-
 
 @app.route('/posts', methods=['GET'])
 def get_posts():
+    """Endpoint to retrieve posts, optionally filtered by a search term."""
     search_term = request.args.get('search', None)
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # table name: test
-    if search_term:
-        cursor.execute(
-            "SELECT * FROM test WHERE post_content LIKE %s;", ('%' + search_term + '%',))
-    else:
-        cursor.execute("SELECT * FROM test;")
-
-    posts = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            query = "SELECT * FROM test" + \
+                (" WHERE post_content LIKE %s;" if search_term else ";")
+            params = ('%' + search_term + '%',) if search_term else ()
+            cursor.execute(query, params)
+            posts = cursor.fetchall()
 
     return jsonify(posts)
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-# s3버킷에 있는 파일 url 생성 -> 프론트에서 클릭하면 해당 링크 갈 수 있게 api endpoint 만들기
 def generate_presigned_url(bucket_name, object_name, expiration=3600):
-    s3_client = boto3.client('s3', aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-                             aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),)
+    s3_client = boto3.client('s3', 
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+    )
 
     try:
-        response = s3_client.generate_presigned_url('get_object',
-                                                    Params={'Bucket': bucket_name,
-                                                            'Key': object_name},
-                                                    ExpiresIn=expiration)
+        params = {'Bucket': bucket_name, 'Key': object_name}
+        return s3_client.generate_presigned_url('get_object', Params=params, ExpiresIn=expiration)
     except NoCredentialsError:
         print('Credentials not available')
         return None
 
-    return response
-
+if __name__ == '__main__':
+    app.run(debug=True)
 
 # Example usage
 bucket = os.getenv("S3_BUCKET")
-object_name = "path/to/your/file.jpg"
+object_name = "path/my/file.jpg"
 url = generate_presigned_url(bucket, object_name)
