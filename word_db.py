@@ -1,5 +1,5 @@
 from app import get_db_connection
-from tokenizer import filter_words, stopwords, punctuation
+from tokenizer import filter_words
 from konlpy.tag import Komoran
 import json
 import os
@@ -13,6 +13,21 @@ def add_words_to_db(file_name):
     # Extract text from words in the JSON data
     words = [word_entry["text"] for word_entry in data["words"]]
 
+    stopwords = [
+    '와', '이', '그', '저', '것', '수', '등', '들', '것', 
+    '때', '더', '그', '이', '수', '등', '등등', '때문', 
+    '때문에', '위', '바로', '좀', '분', '씨', '제', '그것', 
+    '이것', '저것', '의', '에도', '위해', '인의'
+]
+
+    punctuation = [
+    '.', ',', '!', '?', '(', ')', '[', ']', '{', '}', ':', 
+    ';', '-', '_', '+', '=', '/', '*', '~', '`', '@', '#', 
+    '$', '%', '^', '&', '|', '\\', '「', '」', '→', '),', 
+    ')=', '《', '》', '>', '·', 'X', '↑→', '↑', '):', '->', 
+    ')+', ':(', "'", 'x'
+]   
+
     tokenizer = Komoran()
     tokenized = [
         filter_words(tokenizer.nouns(word), stopwords, punctuation)
@@ -24,14 +39,26 @@ def add_words_to_db(file_name):
     tokenized = list(set(tokenized))
 
     # Connect to the database and insert tokenized words
+    file_name_without_extension = os.path.splitext(file_name)[0]
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             for word in tokenized:
                 cursor.execute(
-                    "INSERT INTO words (name, file) VALUES (%s, %s)", (word, file_name))
+                    "INSERT INTO words (word, file) VALUES (%s, %s)", (word, file_name_without_extension))
         conn.commit()
 
     print(f"Tokenization and database insertion complete for {file_name}")
+
+def delete_words_table():
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM words;")
+            
+            # Reset the auto-increment
+            cursor.execute("ALTER SEQUENCE words_id_seq RESTART WITH 1;")
+            
+        conn.commit()
+    print("All records deleted and auto-increment counter reset.")
 
 
 data_folder = './data'
@@ -39,3 +66,7 @@ json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
 
 for file_name in json_files:
     add_words_to_db(file_name)
+
+
+# Call the function to clear the table
+# delete_words_table()
