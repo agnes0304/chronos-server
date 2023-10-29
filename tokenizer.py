@@ -2,52 +2,56 @@ import json
 from konlpy.tag import Komoran
 
 # Function to remove unwanted words based on various conditions
+
+
 def filter_words(word_list, stopwords, punctuation):
     return [
-        word for word in word_list 
-        if word not in stopwords 
-        and word not in punctuation 
+        word for word in word_list
+        if word not in stopwords
+        and word not in punctuation
         and not word.isdigit()
         # and len(word) > 1
     ]
 
-## Load JSON data
-with open('./data/ver1_고려_대외관계_왕계보_키워드.json', 'r', encoding='utf-8') as f:
+
+# Load JSON data
+with open('./data/ver1.5_일제강점기_독립운동.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
-## Extract text from words in the JSON data
-words = [word_entry["text"] for word_entry in data["words"]]
+# Extract text from words in the JSON data
+words = [word_entry["text"]
+         for word_entry in data["words"] if "text" in word_entry]
 
 tokenizer = Komoran()
 
 stopwords = [
-    '와', '이', '그', '저', '것', '수', '등', '들', '것', 
-    '때', '더', '그', '이', '수', '등', '등등', '때문', 
-    '때문에', '위', '바로', '좀', '분', '씨', '제', '그것', 
+    '와', '이', '그', '저', '것', '수', '등', '들', '것',
+    '때', '더', '그', '이', '수', '등', '등등', '때문',
+    '때문에', '위', '바로', '좀', '분', '씨', '제', '그것',
     '이것', '저것', '의', '에도', '위해', '인의'
 ]
 
 punctuation = [
-    '.', ',', '!', '?', '(', ')', '[', ']', '{', '}', ':', 
-    ';', '-', '_', '+', '=', '/', '*', '~', '`', '@', '#', 
-    '$', '%', '^', '&', '|', '\\', '「', '」', '→', '),', 
-    ')=', '《', '》', '>', '·', 'X', '↑→', '↑', '):', '->', 
+    '.', ',', '!', '?', '(', ')', '[', ']', '{', '}', ':',
+    ';', '-', '_', '+', '=', '/', '*', '~', '`', '@', '#',
+    '$', '%', '^', '&', '|', '\\', '「', '」', '→', '),',
+    ')=', '《', '》', '>', '·', 'X', '↑→', '↑', '):', '->',
     ')+', ':(', "'", 'x'
 ]
 
 ## Tokenize and filter
 tokenized = [
-    filter_words(tokenizer.nouns(word), stopwords, punctuation) 
+    filter_words(tokenizer.nouns(word), stopwords, punctuation)
     for word in words
 ]
 
-## Remove empty lists
+# Remove empty lists
 tokenized = [tokens for tokens in tokenized if tokens]
 
-## Flatten the list of lists
+# Flatten the list of lists
 tokenized = [token for sublist in tokenized for token in sublist]
 
-## Remove duplicate tokens
+# Remove duplicate tokens
 tokenized = list(set(tokenized))
 
 print(tokenized)

@@ -19,7 +19,7 @@ def add_words_to_db(file_name):
         data = json.load(f)
 
     # Extract text from words in the JSON data
-    words = [word_entry["text"] for word_entry in data["words"]]
+    words = [word_entry["text"] for word_entry in data["words"] if "text" in word_entry]
 
     stopwords = [
     '와', '이', '그', '저', '것', '수', '등', '들', '것', 
