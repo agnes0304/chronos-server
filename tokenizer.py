@@ -2,7 +2,7 @@ import json
 from konlpy.tag import Komoran
 
 # Function to remove unwanted words based on various conditions
-def filter_words(word_list, stopwords, punctuation):
+def filter_words(word_list, stopwords=stopwords, punctuation=punctuation):
     return [
         word for word in word_list 
         if word not in stopwords 
