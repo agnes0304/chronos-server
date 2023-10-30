@@ -22,6 +22,9 @@ def get_db_connection():
     """Get a new database connection based on the configuration."""
     return psycopg2.connect(**DATABASE_CONFIG)
 
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
 
 @app.route('/posts', methods=['GET'])
 def get_posts():
@@ -61,7 +64,7 @@ def generate_presigned_url(bucket_name, object_name, expiration=3600):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
 
 # Example usage
 # public_url = generate_public_url(bucket_name, object_name)
