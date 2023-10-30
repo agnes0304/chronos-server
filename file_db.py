@@ -1,3 +1,4 @@
+### Create에서 사용가능
 from app import get_db_connection
 
 with get_db_connection() as conn:

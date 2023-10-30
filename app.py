@@ -48,14 +48,10 @@ def hello_world():
 @app.route('/posts', methods=['GET'])
 def get_posts():
     """Endpoint to retrieve posts, optionally filtered by a search term."""
-    search_term = request.args.get('search', None)
-
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            query = "SELECT * FROM files" + \
-                (" WHERE post_content LIKE %s;" if search_term else ";")
-            params = ('%' + search_term + '%',) if search_term else ()
-            cursor.execute(query, params)
+            query = "SELECT * FROM files;"
+            cursor.execute(query)
             posts = cursor.fetchall()
 
     return jsonify(posts)
