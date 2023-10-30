@@ -30,7 +30,7 @@ def get_posts():
 
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            query = "SELECT * FROM test" + \
+            query = "SELECT * FROM files" + \
                 (" WHERE post_content LIKE %s;" if search_term else ";")
             params = ('%' + search_term + '%',) if search_term else ()
             cursor.execute(query, params)
