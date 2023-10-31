@@ -1,7 +1,8 @@
 import os
 import psycopg2
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from dotenv import load_dotenv
+from psycopg2.extras import DictCursor
 
 load_dotenv()
 
@@ -15,28 +16,35 @@ DATABASE_CONFIG = {
     "port": os.getenv("DB_PORT")
 }
 
+
 def get_db_connection():
-    """Get a new database connection based on the configuration."""
     return psycopg2.connect(**DATABASE_CONFIG)
 
 
-
-### server end point
+# server end point
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
 
+
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    """Endpoint to retrieve posts, optionally filtered by a search term."""
-    print("jiwoo01")
+    print("Get")
     with get_db_connection() as conn:
-        with conn.cursor() as cursor:
+        with conn.cursor(cursor_factory=DictCursor) as cursor:
             query = "SELECT * FROM files;"
             cursor.execute(query)
-            posts = cursor.fetchall()
+            
+            colnames = [desc[0] for desc in cursor.description]
+            print("Column names:", colnames)
+            rows = cursor.fetchall()
+            print("Rows fetched:", rows)
+
+    posts = [dict(zip(colnames, row)) for row in rows]
+    print("Posts:", posts)
 
     return jsonify(posts)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
