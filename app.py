@@ -40,5 +40,18 @@ def get_posts():
 
     return jsonify(posts)
 
+# id값으로 조회
+@app.route('/posts/<int:post_id>', methods=['GET'])
+def get_post(post_id):
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=DictCursor) as cursor:
+            query = "SELECT * FROM files WHERE id = %s;"
+            cursor.execute(query, (post_id,))
+            post = cursor.fetchone()
+
+    post = dict(post)
+
+    return jsonify(post)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
