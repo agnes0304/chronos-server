@@ -29,22 +29,16 @@ def hello_world():
 
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    print("Get")
+    
     with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=DictCursor) as cursor:
+        with conn.cursor(cursor_factory=DictCursor) as cursor:  # Use DictCursor here
             query = "SELECT * FROM files;"
             cursor.execute(query)
-            
-            colnames = [desc[0] for desc in cursor.description]
-            print("Column names:", colnames)
-            rows = cursor.fetchall()
-            print("Rows fetched:", rows)
+            posts = cursor.fetchall()
 
-    posts = [dict(zip(colnames, row)) for row in rows]
-    print("Posts:", posts)
+    posts = [dict(row) for row in posts]
 
     return jsonify(posts)
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
