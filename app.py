@@ -81,10 +81,10 @@ def get_download_link(file_name):
         print(url)
 
 
-        # 📌 CORS error 해결 위한 test code
+        # DONE: CORS에러 test code
         # return jsonify({'url': 'test!!'})
 
-        # ERROR! NoSuchKey: The specified key does not exist.
+        # ERROR: NoSuchKey
         return jsonify({'url': url})
     except Exception as e:
         print(e)
