@@ -72,7 +72,7 @@ def get_download_link(file_name):
     try:
         url = s3_client.generate_presigned_url('get_object',
                                         Params=params,
-                                        ExpiresIn=600)  # 10 min
+                                        ExpiresIn=600)
         print(url)
 
 
