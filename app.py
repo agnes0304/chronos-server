@@ -79,7 +79,7 @@ def get_download_link(file_name):
         # DONE: CORS에러 test code
         # return jsonify({'url': 'test!!'})
 
-        # ERROR: NoSuchKey
+        # DONE: NoSuchKey -> kor to eng(filename)
         return jsonify({'url': url})
     except Exception as e:
         print(e)
