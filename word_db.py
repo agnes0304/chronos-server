@@ -46,16 +46,37 @@ def add_words_to_db(file_name):
     tokenized = [token for sublist in tokenized for token in sublist]
     tokenized = list(set(tokenized))
 
-    # Connect to the database and insert tokenized words
+    ### version01. insert into words table (without JOIN)
+    ### Connect to the database and insert tokenized words
+    # file_name_without_extension = os.path.splitext(file_name)[0]
+    # with get_db_connection() as conn:
+    #     with conn.cursor() as cursor:
+    #         for word in tokenized:
+    #             cursor.execute(
+    #                 "INSERT INTO words (word, file) VALUES (%s, %s)", (word, file_name_without_extension))
+    #     conn.commit()
+
+    # print(f"Tokenization and database insertion complete for {file_name}")
+
+    ### version02. insert into words table (without JOIN)
+    ### Connect to the database and insert tokenized words
     file_name_without_extension = os.path.splitext(file_name)[0]
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             for word in tokenized:
+                # Use a subquery to get the id of the file from the 'files' table
                 cursor.execute(
-                    "INSERT INTO words (word, file) VALUES (%s, %s)", (word, file_name_without_extension))
+                    """
+                    INSERT INTO words (word, file) 
+                    SELECT %s, id 
+                    FROM files 
+                    WHERE filename = %s
+                    """, 
+                    (word, file_name_without_extension))
         conn.commit()
 
     print(f"Tokenization and database insertion complete for {file_name}")
+
 
 def delete_words_table():
     with get_db_connection() as conn:
@@ -76,5 +97,5 @@ for file_name in json_files:
     add_words_to_db(file_name)
 
 
-# Call the function to clear the table
+### Call the function to clear the table
 # delete_words_table()
