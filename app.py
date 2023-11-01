@@ -6,12 +6,10 @@ from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
 import boto3
 
-
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-
 
 DATABASE_CONFIG = {
     "dbname": "chronos",
@@ -20,7 +18,6 @@ DATABASE_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "port": os.getenv("DB_PORT")
 }
-
 
 def get_db_connection():
     return psycopg2.connect(**DATABASE_CONFIG)
@@ -45,9 +42,8 @@ def get_posts():
 
     return jsonify(posts)
 
+
 # id값으로 조회
-
-
 @app.route('/posts/<int:post_id>', methods=['GET'])
 def get_post(post_id):
 
@@ -61,9 +57,8 @@ def get_post(post_id):
 
     return jsonify(post)
 
+
 # s3 url 생성 -> 일단 테스트해보기
-
-
 @app.route('/download/<string:file_name>', methods=['GET'])
 def get_download_link(file_name):
     s3_client = boto3.client('s3',
