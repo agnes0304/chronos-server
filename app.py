@@ -65,6 +65,8 @@ def get_download_link(file_name):
                                     Params={'Bucket': bucket_name,
                                             'Key': file_name},
                                     ExpiresIn=600) # 10 min
+    print(url)
+    # url은 OK / CORS에러, NoSuchKey에러. 
     return jsonify({'url': url})
 
 if __name__ == '__main__':
