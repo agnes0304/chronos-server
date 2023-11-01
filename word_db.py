@@ -93,17 +93,6 @@ def delete_words_table():
     print("All records deleted and auto-increment counter reset.")
 
 
-# data_folder = './data'
-# json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
-
-# for file_name in json_files:
-#     add_words_to_db(file_name)
-
-
-# Call the function to clear the table
-# delete_words_table()
-
-
 # words table에서 2글자 이상 word 전부 가지고 오기 -> 자동완성
 def get_words():
     with get_db_connection() as conn:
@@ -118,4 +107,14 @@ def get_words():
 
     return words
 
-print(get_words())
+# data_folder = './data'
+# json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
+
+# for file_name in json_files:
+#     add_words_to_db(file_name)
+
+
+# Call the function to clear the table
+# delete_words_table()
+
+

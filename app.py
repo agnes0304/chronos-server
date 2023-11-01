@@ -86,7 +86,7 @@ def get_download_link(file_name):
         return jsonify({'error': e})
 
 
-# words table에서 2글자 이상 word 전부 가지고 오기 -> 자동완성
+# words table에서 2글자 이상 word 전부 가지고 오기 -> 자동완성용
 @app.route('/words', methods=['GET'])
 def get_words():
     with get_db_connection() as conn:
