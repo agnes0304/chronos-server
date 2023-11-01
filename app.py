@@ -86,5 +86,20 @@ def get_download_link(file_name):
         return jsonify({'error': e})
 
 
+# words table에서 2글자 이상 word 전부 가지고 오기 -> 자동완성
+@app.route('/words', methods=['GET'])
+def get_words():
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            query = "SELECT word FROM words WHERE LENGTH(word) > 1;"
+            cursor.execute(query)
+            words = cursor.fetchall()
+
+    words = [word[0] for word in words]
+    # 중복제거
+    words = list(set(words))
+
+    return jsonify(words)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
