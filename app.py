@@ -1,15 +1,17 @@
 import os
 import psycopg2
 from flask import Flask, jsonify
+from flask_cors import CORS
 from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
 import boto3
 
-s3 = boto3.client('s3')
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
+
 
 DATABASE_CONFIG = {
     "dbname": "chronos",
@@ -32,7 +34,7 @@ def hello_world():
 
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    
+
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:  # Use DictCursor here
             query = "SELECT * FROM files;"
@@ -44,6 +46,8 @@ def get_posts():
     return jsonify(posts)
 
 # id값으로 조회
+
+
 @app.route('/posts/<int:post_id>', methods=['GET'])
 def get_post(post_id):
 
@@ -58,16 +62,34 @@ def get_post(post_id):
     return jsonify(post)
 
 # s3 url 생성 -> 일단 테스트해보기
+
+
 @app.route('/download/<string:file_name>', methods=['GET'])
 def get_download_link(file_name):
+    s3_client = boto3.client('s3',
+                             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                             aws_secret_access_key=os.getenv(
+                                 "AWS_SECRET_ACCESS_KEY")
+                             )
+
     bucket_name = os.getenv("S3_BUCKET")
-    url = s3.generate_presigned_url('get_object',
-                                    Params={'Bucket': bucket_name,
-                                            'Key': file_name},
-                                    ExpiresIn=600) # 10 min
-    print(url)
-    # url은 OK / CORS에러, NoSuchKey에러. 
-    return jsonify({'url': url})
+    params = {'Bucket': bucket_name, 'Key': file_name}
+    try:
+        url = s3_client.generate_presigned_url('get_object',
+                                        Params=params,
+                                        ExpiresIn=600)  # 10 min
+        print(url)
+
+
+        # 📌 CORS error 해결 위한 test code
+        # return jsonify({'url': 'test!!'})
+
+        # ERROR! NoSuchKey: The specified key does not exist.
+        return jsonify({'url': url})
+    except Exception as e:
+        print(e)
+        return jsonify({'error': e})
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
