@@ -70,12 +70,14 @@ def get_posts():
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:
             if search_terms:
+                # Prepare search terms with wildcards for ILIKE
+                like_terms = ["%" + term + "%" for term in search_terms]  # Add wildcards to each term
+                # Pass the list of like_terms directly as an array for the ANY operator
                 query = """
                 SELECT f.* FROM words w
-                INNER JOIN files f ON w.file = f.id 
+                INNER JOIN files f ON w.file = f.id
                 WHERE w.word ILIKE ANY(%s);
                 """
-                like_terms = tuple(f"%{term}%" for term in search_terms)
                 cursor.execute(query, (like_terms,))
             else:
                 query = "SELECT * FROM files;"
@@ -84,6 +86,7 @@ def get_posts():
 
     posts = [dict(row) for row in posts]
     return jsonify(posts)
+
 
 # id값으로 조회
 @app.route('/posts/<int:post_id>', methods=['GET'])
