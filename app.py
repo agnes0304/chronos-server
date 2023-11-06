@@ -31,31 +31,50 @@ def hello_world():
 
 @app.route('/posts', methods=['GET'])
 # def get_posts():
-
 #     with get_db_connection() as conn:
 #         with conn.cursor(cursor_factory=DictCursor) as cursor:  # Use DictCursor here
 #             query = "SELECT * FROM files;"
 #             cursor.execute(query)
 #             posts = cursor.fetchall()
-
 #     posts = [dict(row) for row in posts]
-
 #     return jsonify(posts)
 
-### query 처리
-def get_posts():
-    search_terms = request.args.getlist('search')  # Get all search terms for key 'a'
+### query 처리 테스트 001
+# def get_posts():
+#     search_terms = request.args.getlist('search')
+#     print(search_terms)
+#     with get_db_connection() as conn:
+#         with conn.cursor(cursor_factory=DictCursor) as cursor:
+#             if search_terms:
+#                 # Use ILIKE for case-insensitive search
+#                 query = """
+#                 SELECT DISTINCT f.* FROM words w
+#                 INNER JOIN files f ON w.file = f.id
+#                 WHERE w.word ILIKE ANY(%s);
+#                 """
+#                 like_terms = tuple(f"%{term}%" for term in search_terms)
+#                 cursor.execute(query, (like_terms,))
+#             else:
+#                 query = "SELECT * FROM files;"
+#                 cursor.execute(query)
+#             posts = cursor.fetchall()
+#     posts = [dict(row) for row in posts]
+#     return jsonify(posts)
 
+
+### query 처리 테스트 002
+@app.route('/posts', methods=['GET'])
+def get_posts():
+    search_terms = request.args.getlist('search')
+    print(search_terms)
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:
             if search_terms:
-                # We will use ILIKE for case-insensitive search and ANY for multiple search terms
                 query = """
-                SELECT DISTINCT f.* FROM words w
-                INNER JOIN files f ON w.fileId = f.id
+                SELECT f.* FROM words w
+                INNER JOIN files f ON w.file = f.id 
                 WHERE w.word ILIKE ANY(%s);
                 """
-                # Prepare the search terms with wildcards and in a tuple
                 like_terms = tuple(f"%{term}%" for term in search_terms)
                 cursor.execute(query, (like_terms,))
             else:
