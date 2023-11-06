@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
@@ -30,18 +30,41 @@ def hello_world():
 
 
 @app.route('/posts', methods=['GET'])
+# def get_posts():
+
+#     with get_db_connection() as conn:
+#         with conn.cursor(cursor_factory=DictCursor) as cursor:  # Use DictCursor here
+#             query = "SELECT * FROM files;"
+#             cursor.execute(query)
+#             posts = cursor.fetchall()
+
+#     posts = [dict(row) for row in posts]
+
+#     return jsonify(posts)
+
+### query 처리
 def get_posts():
+    search_terms = request.args.getlist('search')  # Get all search terms for key 'a'
 
     with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=DictCursor) as cursor:  # Use DictCursor here
-            query = "SELECT * FROM files;"
-            cursor.execute(query)
+        with conn.cursor(cursor_factory=DictCursor) as cursor:
+            if search_terms:
+                # We will use ILIKE for case-insensitive search and ANY for multiple search terms
+                query = """
+                SELECT DISTINCT f.* FROM words w
+                INNER JOIN files f ON w.fileId = f.id
+                WHERE w.word ILIKE ANY(%s);
+                """
+                # Prepare the search terms with wildcards and in a tuple
+                like_terms = tuple(f"%{term}%" for term in search_terms)
+                cursor.execute(query, (like_terms,))
+            else:
+                query = "SELECT * FROM files;"
+                cursor.execute(query)
             posts = cursor.fetchall()
 
     posts = [dict(row) for row in posts]
-
     return jsonify(posts)
-
 
 # id값으로 조회
 @app.route('/posts/<int:post_id>', methods=['GET'])
