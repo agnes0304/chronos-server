@@ -43,19 +43,27 @@ def hello_world():
 @app.route('/posts', methods=['GET'])
 def get_posts():
     search_terms = request.args.getlist('search')
-
+    print(search_terms)
     if search_terms:
-        like_terms = ["%" + term + "%" for term in search_terms]
-        query = """
-            SELECT DISTINCT f.* FROM words w
-            INNER JOIN files f ON w.fileId = f.id
-            WHERE w.word ILIKE ANY(%s);
-        """
-        data = supabase.table("files").execute_sql(query, (like_terms,)).data
+        like_terms = "%{}%".join(search_terms)
+        
+        # query = """
+        #     SELECT DISTINCT f.* FROM words w
+        #     INNER JOIN files f ON w.fileId = f.id
+        #     WHERE w.word ILIKE ANY(%s);
+        # """
+
+        # data = supabase.query(query, (like_terms,)).execute().data
+        # data = supabase.table("words").select("fileId, files (id)").like("word", like_terms).execute()
+        data = supabase.rpc("hello_world", {})
+        print(data.execute())
+
+        # ta = supabase.table("countries").select("*").eq("country", "IL").execute()
     else:
         data = supabase.table("files").select("*").execute().data
 
     return jsonify(data)
+    
 
 ### POSTGRESQL CODE
 # @app.route('/posts', methods=['GET'])
