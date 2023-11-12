@@ -1,5 +1,17 @@
 # Create에서 사용가능
-from app import get_db_connection
+import os
+import psycopg2
+
+def get_db_connection():
+    return psycopg2.connect(**DATABASE_CONFIG)
+
+DATABASE_CONFIG = {
+    "dbname": "chronos",
+    "user": "postgres",
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT")
+}
 
 object = [
     {'title': '부록: 연표 미기재 기출파트', 'body': '연표에는 없지만 한국사능력검정시험에 등장한 부분을 정리한 부록입니다.',

@@ -1,9 +1,7 @@
 import os
-import psycopg2
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-# from psycopg2.extras import DictCursor
 import boto3
 
 from supabase import create_client, Client
@@ -13,44 +11,30 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
-
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-DATABASE_CONFIG = {
-    "dbname": "chronos",
-    "user": "postgres",
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": os.getenv("DB_PORT")
-}
-
-def get_db_connection():
-    return psycopg2.connect(**DATABASE_CONFIG)
-
-
-# server end point
+### MAIN
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
 
 
-### query string으로 검색어 받아서 조회
 ### SUPABASE CODE
 @app.route('/posts', methods=['GET'])
 def get_posts():
     search_terms = request.args.getlist('search')
-    # print(search_terms)
     if search_terms:
+        print(f"search_terms: {search_terms}")
         search_query = '|'.join(search_terms)
 
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
 
         return response
     else:
+        print("search_terms is empty")
         response = supabase.table("files").select("*").execute().data
         return response
 

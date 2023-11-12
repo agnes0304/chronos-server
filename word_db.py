@@ -1,7 +1,19 @@
-from app import get_db_connection
 from konlpy.tag import Komoran
 import json
 import os
+
+import psycopg2
+
+def get_db_connection():
+    return psycopg2.connect(**DATABASE_CONFIG)
+
+DATABASE_CONFIG = {
+    "dbname": "chronos",
+    "user": "postgres",
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT")
+}
 
 
 def filter_words(word_list, stopwords, punctuation):

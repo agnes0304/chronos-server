@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for chronos-server on 2023-11-12T16:29:14+09:00
+# fly.toml app configuration file generated for chronos on 2023-11-12T19:15:33+09:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "chronos-server"
+app = "chronos"
 primary_region = "nrt"
 
 [build]
