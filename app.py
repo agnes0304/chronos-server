@@ -30,15 +30,16 @@ def hello_world():
 
 ### 📌 데이터 조회
 ### SUPABASE CODE
+#  search=word1+word2+word3
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    search_terms = request.args.getlist('search')
+    # search_terms = request.args.getlist('search')
+    search_terms = request.args.get('search', '').split(' ')  # ['word1', 'word2']
     if search_terms:
-        print(f"search_terms: {search_terms}")
         search_query = '|'.join(search_terms)
-
+        print(search_query)
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
-
+        print(response) # -> none
         return response
     else:
         print("search_terms is empty")
