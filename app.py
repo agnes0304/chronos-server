@@ -12,6 +12,13 @@ import boto3
 
 from supabase import create_client, Client
 
+from botocore.config import Config
+
+my_config = Config(
+    signature_version = 'v4',
+)
+
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
@@ -59,6 +66,8 @@ def get_post(post_id):
 @app.route('/download/<string:file_name>', methods=['GET'])
 def get_download_link(file_name):
     s3_client = boto3.client('s3',
+                             config=my_config,
+                             region_name='ap-northeast-2',
                              aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
                              aws_secret_access_key=os.getenv(
                                  "AWS_SECRET_ACCESS_KEY")
@@ -70,7 +79,6 @@ def get_download_link(file_name):
         url = s3_client.generate_presigned_url('get_object',
                                         Params=params,
                                         ExpiresIn=600)
-        # DONE: CORS에러 test code
 
         return jsonify({'url': url})
     except Exception as e:
