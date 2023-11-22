@@ -41,7 +41,7 @@ def hello_world():
 @app.route('/posts', methods=['GET'])
 def get_posts():
     # search_terms = request.args.getlist('search')
-    search_terms = request.args.get('search').split('+')
+    search_terms = request.args.get('search').split(' ')
     if search_terms:
         search_query = '|'.join(search_terms)
         print(search_query)
