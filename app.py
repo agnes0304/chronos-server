@@ -40,13 +40,12 @@ def hello_world():
 #  search=word1+word2+word3
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    # search_terms = request.args.getlist('search')
-    search_terms = request.args.get('search').split("")
+    search_terms = request.args.get('search').split(" ")
     if search_terms:
-        search_query = '|'.join(search_terms)
+        search_query = ' | '.join(search_terms) # | 기준으로 공백필수.
         print(search_query)
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
-        print(response) # -> none
+        print(response) # 
         return response
     else:
         print("search_terms is empty")
