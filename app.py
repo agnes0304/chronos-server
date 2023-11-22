@@ -1,9 +1,3 @@
-### MEMO
-'''
-Postgresql 코드 전부 삭제함. 
-Supabase 받아와서 전달하는 값 재확인 필요
-'''
-
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -45,7 +39,7 @@ def get_posts():
         search_query = ' | '.join(search_terms) # | 기준으로 공백필수.
         print(search_query)
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
-        print(response) # 
+        print(response)
         return response
     else:
         print("search_terms is empty")
