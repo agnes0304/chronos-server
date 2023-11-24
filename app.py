@@ -26,15 +26,16 @@ CORS(app)
 
 # S3 presigned url 생성 함수
 def create_presigned_url(files, expiration=86400):
+    s3_client = boto3.client('s3',
+                             config=my_config,
+                             region_name='ap-northeast-2',
+                             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                             aws_secret_access_key=os.getenv(
+                                 "AWS_SECRET_ACCESS_KEY")
+                            )
+    bucket_name = os.getenv("S3_BUCKET")
+
     if isinstance(files, list):
-        s3_client = boto3.client('s3',
-                                 config=my_config,
-                                 region_name='ap-northeast-2',
-                                 aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-                                 aws_secret_access_key=os.getenv(
-                                     "AWS_SECRET_ACCESS_KEY")
-                                 )
-        bucket_name = os.getenv("S3_BUCKET")
         response = []
         for file in files:
             params = {'Bucket': bucket_name, 'Key': file}
@@ -45,16 +46,8 @@ def create_presigned_url(files, expiration=86400):
             except Exception as e:
                 print(e)
                 return None
-        return response
+        return {'urls': response}
     else:
-        s3_client = boto3.client('s3',
-                                 config=my_config,
-                                 region_name='ap-northeast-2',
-                                 aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-                                 aws_secret_access_key=os.getenv(
-                                     "AWS_SECRET_ACCESS_KEY")
-                                 )
-        bucket_name = os.getenv("S3_BUCKET")
         params = {'Bucket': bucket_name, 'Key': files}
         try:
             response = s3_client.generate_presigned_url('get_object',
@@ -63,7 +56,7 @@ def create_presigned_url(files, expiration=86400):
         except Exception as e:
             print(e)
             return None
-        return response
+        return {'urls': response}
     
     
 ### MAIN
