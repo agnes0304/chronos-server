@@ -25,7 +25,7 @@ app = Flask(__name__)
 CORS(app)
 
 # S3 presigned url 생성 함수
-def create_presigned_url(files, expiration=86400000):
+def create_presigned_url(files, expiration=86400):
     if isinstance(files, list):
         s3_client = boto3.client('s3',
                                  config=my_config,
@@ -46,8 +46,26 @@ def create_presigned_url(files, expiration=86400000):
                 print(e)
                 return None
         return response
-
-
+    else:
+        s3_client = boto3.client('s3',
+                                 config=my_config,
+                                 region_name='ap-northeast-2',
+                                 aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                                 aws_secret_access_key=os.getenv(
+                                     "AWS_SECRET_ACCESS_KEY")
+                                 )
+        bucket_name = os.getenv("S3_BUCKET")
+        params = {'Bucket': bucket_name, 'Key': files}
+        try:
+            response = s3_client.generate_presigned_url('get_object',
+                                                        Params=params,
+                                                        ExpiresIn=expiration)
+        except Exception as e:
+            print(e)
+            return None
+        return response
+    
+    
 ### MAIN
 @app.route('/')
 def hello_world():
@@ -97,7 +115,7 @@ def get_download_link(file_name):
     try:
         url = s3_client.generate_presigned_url('get_object',
                                         Params=params,
-                                        ExpiresIn=600)
+                                        ExpiresIn=86400)
 
         return jsonify({'url': url})
     except Exception as e:
