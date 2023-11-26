@@ -4,7 +4,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
 import hashlib
-
+import urllib.parse
+import requests
 from supabase import create_client, Client
 
 from botocore.config import Config
@@ -33,7 +34,7 @@ def create_presigned_url(files, expiration=86400):
                              aws_secret_access_key=os.getenv(
                                  "AWS_SECRET_ACCESS_KEY")
                             )
-    bucket_name = os.getenv("S3_BUCKET")
+    bucket_name = os.getenv("S3_PRIVATE_BUCKET")
 
     if isinstance(files, list):
         response = []
@@ -72,13 +73,10 @@ def hello_world():
 def get_posts():
     search_terms = request.args.get('search').split(" ")
     if search_terms:
-        search_query = ' | '.join(search_terms) # | 기준으로 공백필수.
-        print(search_query)
+        search_query = ' | '.join(search_terms)
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
-        print(response)
         return response
     else:
-        print("search_terms is empty")
         response = supabase.table("files").select("*").execute().data
         return response
 
@@ -128,11 +126,14 @@ def get_words():
 
 
 ### 📌 상품 정보 조회
-@app.route('/product', methods=['GET'])
+@app.route('/product', methods=['POST'])
 def get_product():
-    name = request.args.get('name')
+    data = request.get_json() 
+    name = data.get('name') if data else None
     data = supabase.table("products").select("*").eq("name", name).execute().data
+    
     return jsonify(data[0] if data else {})
+    # {'id':1,'name':'test'} return
 
 
 ### 📌 결제 내역 조회
@@ -140,12 +141,59 @@ def get_product():
 @app.route('/orders', methods=['GET'])
 def get_orders():
     hashed_mobile = request.args.get('hashed_mobile')
+    print(hashed_mobile)
     filelist = supabase.rpc("get_filenames_by_mobile", {'mobile': hashed_mobile}).execute().data
-    # 동작하는 거 확인함 ["all_appendix.pdf","all_blank.pdf"]
-    # filelist에 있는 filename_ex들을 가지고 s3 url 생성해서 return
+    print(filelist)
     response = create_presigned_url(filelist)
-    print(response)
+    print(response) # print test 필요
     return jsonify(response)
+
+
+### 📌 결제 요청
+@app.route('/paying_payapp', methods=['POST'])
+def process_payment():
+    order = request.get_json() 
+
+    goodName = order.get('goodname') if order else None
+    price = order.get('price') if order else None
+    recvphone = order.get('recvphone') if order else None
+
+    userID = os.getenv('PAYAPP_USERID')
+    shopName = os.getenv('PAYAPP_SHOPNAME')
+    returnURL = os.getenv('PAYAPP_RETURNURL')
+    feedbackURL = os.getenv('PAYAPP_FEEDBACKURL')
+    
+    data = {
+        'cmd': 'payrequest',
+        'userid': userID,
+        'shopname': shopName,
+        'returnurl': returnURL,
+        'goodname': goodName,
+        'price': int(price),
+        'recvphone': recvphone,
+        'smsuse': 'n',
+        'feedbackurl': feedbackURL,
+        # 'redirectpay': '1',
+        'skip_cstpage': 'y',
+    }
+
+    encoded_data = urllib.parse.urlencode(data)
+
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,*/*',
+        'Host': 'api.payapp.kr',
+        'Accept-Language': 'ko-KR',
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    response = requests.post('http://api.payapp.kr/oapi/apiLoad.html', headers=headers, data=encoded_data)
+    if response.status_code == 200:
+        response_data = urllib.parse.parse_qs(response.text)
+
+        if response_data['state'][0] == '0':
+            return "결제 도중 에러가 발생했습니다. 다시 결제를 진행해 주시기바랍니다."
+    else:
+        return "Error with the external API request"
 
 
 ### 📌 페이앱에서 결제완료 후 전송하는 피드백
