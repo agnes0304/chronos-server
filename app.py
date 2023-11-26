@@ -138,9 +138,10 @@ def get_product():
 
 ### 📌 결제 내역 조회
 # body로 hashedmobile받아서 orders에 있는 모든 데이터 조회
-@app.route('/orders', methods=['GET'])
+@app.route('/orders', methods=['POST'])
 def get_orders():
-    hashed_mobile = request.args.get('hashed_mobile')
+    data = request.get_json() 
+    hashed_mobile = data.get('hashed_mobile') if data else None
     print(hashed_mobile)
     filelist = supabase.rpc("get_filenames_by_mobile", {'mobile': hashed_mobile}).execute().data
     print(filelist)
