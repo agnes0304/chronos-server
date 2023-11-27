@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import boto3
 import hashlib
 import urllib.parse
-import requests
 from supabase import create_client, Client
 
 from botocore.config import Config
@@ -66,9 +65,17 @@ def hello_world():
     return 'Hello, World!'
 
 
-### 📌 데이터 조회
-### SUPABASE CODE
-#  search=word1+word2+word3
+### 📌 검색 자동 완성
+### - 2글자 이상만 반영
+@app.route('/words', methods=['GET'])
+def get_words():
+    data = supabase.table("words").select("word").execute().data
+    words = [word['word'] for word in data if len(word['word']) > 1]
+    words = list(set(words))  
+    return jsonify(words)
+
+
+### 📌 전체 데이터 조회
 @app.route('/posts', methods=['GET'])
 def get_posts():
     search_terms = request.args.get('search').split(" ")
@@ -81,15 +88,14 @@ def get_posts():
         return response
 
 
-### 📌 개별 데이터 조회(ID)
-### SUPABASE CODE
+### 📌 개별 포스트 데이터 조회(ID)
 @app.route('/posts/<int:post_id>', methods=['GET'])
 def get_post(post_id):
     data = supabase.table("files").select("*").eq("id", post_id).execute().data
     return jsonify(data[0] if data else {})
 
 
-### 📌 S3 url 생성
+### 📌 무료 자료 다운로드 링크 생성
 @app.route('/download/<string:file_name>', methods=['GET'])
 def get_download_link(file_name):
     s3_client = boto3.client('s3',
@@ -114,18 +120,7 @@ def get_download_link(file_name):
         return jsonify({'error': e})
 
 
-### 📌 자동완성 기능
-### - 2글자 이상만 반영
-### SUPABASE CODE
-@app.route('/words', methods=['GET'])
-def get_words():
-    data = supabase.table("words").select("word").execute().data
-    words = [word['word'] for word in data if len(word['word']) > 1]
-    words = list(set(words))  
-    return jsonify(words)
-
-
-### 📌 상품 정보 조회
+### 📌 주문서 용 상품 정보 조회
 @app.route('/product/<string:name>', methods=['GET'])
 def get_product(name):
     data = supabase.table("products").select("*").eq("name", name).execute().data
@@ -133,8 +128,9 @@ def get_product(name):
     # {'id':1,'name':'test'} return
 
 
-### 📌 결제 내역 조회
+### 📌 구매한 상품 url 조회
 # body로 hashedemail받아서 orders에 있는 모든 데이터 조회
+# TODO :confirm가 true인 데이터만 조회
 @app.route('/orders/<string:email>', methods=['GET'])
 def get_orders(email):
     filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
@@ -142,6 +138,25 @@ def get_orders(email):
     return jsonify(response)
 
 
+### 📌 입금확인 대기중인 주문 내역 생성
+# TODO: confirmed column 추가해서 false로 저장
+@app.route('/orders', methods=['POST'])
+
+
+### 📌 입금확인 대기중인 주문 내역 조회
+# TODO: confirmed가 false인 데이터만 조회
+@app.route('/queue', methods=['GET'])
+
+
+### 📌 입금확인
+# TODO: confirmed를 true로 변경
+@app.route('/orders/<int:order_id>', methods=['PUT'])
+
+
+
+### 📌 판매자에게 입금확인 요청 이메일 전송
+# TODO: AWS SES 사용
+@app.route('/email', methods=['POST'])
 
 
 if __name__ == '__main__':
