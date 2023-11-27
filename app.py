@@ -3,8 +3,7 @@ from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
-import hashlib
-import urllib.parse
+import json
 from supabase import create_client, Client
 
 from botocore.config import Config
@@ -125,12 +124,11 @@ def get_download_link(file_name):
 def get_product(name):
     data = supabase.table("products").select("*").eq("name", name).execute().data
     return jsonify(data[0] if data else {})
-    # {'id':1,'name':'test'} return
 
 
 ### 📌 구매한 상품 url 조회
 # body로 hashedemail받아서 orders에 있는 모든 데이터 조회
-# TODO :confirm가 true인 데이터만 조회
+# confirm가 true인 데이터만 조회 -> DONE
 @app.route('/orders/<string:email>', methods=['GET'])
 def get_orders(email):
     filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
@@ -141,22 +139,30 @@ def get_orders(email):
 ### 📌 입금확인 대기중인 주문 내역 생성
 # TODO: confirmed column 추가해서 false로 저장
 @app.route('/orders', methods=['POST'])
+def create_order():
+    data = request.get_json()
+    data['isConfirm']=False
+    response = supabase.table("orders").insert(data).execute()
+    if response.data[0]:
+        return jsonify({'message': response.data[0]})
+
+    return jsonify({'message': "Insert Failed"})
 
 
-### 📌 입금확인 대기중인 주문 내역 조회
-# TODO: confirmed가 false인 데이터만 조회
-@app.route('/queue', methods=['GET'])
+# ### 📌 입금확인 대기중인 주문 내역 조회
+# # TODO: confirmed가 false인 데이터만 조회
+# @app.route('/queue', methods=['GET'])
 
 
-### 📌 입금확인
-# TODO: confirmed를 true로 변경
-@app.route('/orders/<int:order_id>', methods=['PUT'])
+# ### 📌 입금확인
+# # TODO: confirmed를 true로 변경
+# @app.route('/orders/<int:order_id>', methods=['PUT'])
 
 
 
-### 📌 판매자에게 입금확인 요청 이메일 전송
-# TODO: AWS SES 사용
-@app.route('/email', methods=['POST'])
+# ### 📌 판매자에게 입금확인 요청 이메일 전송
+# # TODO: AWS SES 사용
+# @app.route('/email', methods=['POST'])
 
 
 if __name__ == '__main__':
