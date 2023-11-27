@@ -164,13 +164,18 @@ def admin_login():
 @app.route('/queue', methods=['GET'])
 def get_queue():
     response = supabase.table("orders").select("*").eq("isConfirm", False).execute().data
-    print(response)
     return jsonify(response)
 
 
-# ### 📌 입금확인
-# # TODO: confirmed를 true로 변경
-# @app.route('/orders/<int:order_id>', methods=['PUT'])
+### 📌 입금확인
+# TODO: confirmed를 true로 변경
+@app.route('/queue/<int:order_id>', methods=['PUT'])
+def confirm_order(order_id):
+    response = supabase.table("orders").update({"isConfirm": True}).eq("id", order_id).execute()
+    if response.data[0]:
+        return jsonify({'message': response.data[0]})
+
+    return jsonify({'message': "Update Failed"})
 
 
 
