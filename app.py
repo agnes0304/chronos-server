@@ -149,6 +149,16 @@ def create_order():
     return jsonify({'message': "Insert Failed"})
 
 
+### 📌 관리자 로그인
+@app.route('/admin', methods=['POST'])
+def admin_login():
+    data = request.get_json()
+    response = supabase.table("users").select("*").eq("email", data['email']).execute().data
+    if response.data[0].get('role') == 1:
+        return jsonify({'message': "success"})
+    return jsonify({'message': "failed"})
+
+
 # ### 📌 입금확인 대기중인 주문 내역 조회
 # # TODO: confirmed가 false인 데이터만 조회
 # @app.route('/queue', methods=['GET'])
