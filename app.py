@@ -126,12 +126,9 @@ def get_words():
 
 
 ### 📌 상품 정보 조회
-@app.route('/product', methods=['POST'])
-def get_product():
-    data = request.get_json() 
-    name = data.get('name') if data else None
+@app.route('/product/<string:name>', methods=['GET'])
+def get_product(name):
     data = supabase.table("products").select("*").eq("name", name).execute().data
-    
     return jsonify(data[0] if data else {})
     # {'id':1,'name':'test'} return
 
@@ -140,93 +137,11 @@ def get_product():
 # body로 hashedemail받아서 orders에 있는 모든 데이터 조회
 @app.route('/orders/<string:email>', methods=['GET'])
 def get_orders(email):
-    # data = request.get_json() 
-    # hashed_email = data.get('hashed_email') if data else None
     filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
     response = create_presigned_url(filelist)
     return jsonify(response)
 
 
-### 📌 페이앱 결제 요청 -> api 사용안함
-# @app.route('/paying_payapp', methods=['POST'])
-# def process_payment():
-#     order = request.get_json() 
-
-#     goodName = order.get('goodname') if order else None
-#     price = order.get('price') if order else None
-#     recvphone = order.get('recvphone') if order else None
-
-#     userID = os.getenv('PAYAPP_USERID')
-#     shopName = os.getenv('PAYAPP_SHOPNAME')
-#     returnURL = os.getenv('PAYAPP_RETURNURL')
-#     feedbackURL = os.getenv('PAYAPP_FEEDBACKURL')
-    
-#     data = {
-#         'cmd': 'payrequest',
-#         'userid': userID,
-#         'shopname': shopName,
-#         'returnurl': returnURL,
-#         'goodname': goodName,
-#         'price': int(price),
-#         'recvphone': recvphone,
-#         'smsuse': 'n',
-#         'feedbackurl': feedbackURL,
-#         # 'redirectpay': '1',
-#         'skip_cstpage': 'y',
-#     }
-
-#     encoded_data = urllib.parse.urlencode(data)
-
-#     headers = {
-#         'Accept': 'text/html,application/xhtml+xml,*/*',
-#         'Host': 'api.payapp.kr',
-#         'Accept-Language': 'ko-KR',
-#         'Content-Type': 'application/x-www-form-urlencoded',
-#     }
-
-#     response = requests.post('http://api.payapp.kr/oapi/apiLoad.html', headers=headers, data=encoded_data)
-#     if response.status_code == 200:
-#         response_data = urllib.parse.parse_qs(response.text)
-
-#         if response_data['state'][0] == '0':
-#             return "결제 도중 에러가 발생했습니다. 다시 결제를 진행해 주시기바랍니다."
-#     else:
-#         return "Error with the external API request"
-
-
-### 📌 페이앱에서 결제완료 후 전송하는 피드백 -> api 사용안함
-# @app.route('/paying_feedback', methods=['POST'])
-# def process_payment_feedback():
-#     payapp_userid = 'payapp seller ID' 
-#     payapp_key = os.getenv('PAYAPP_API_KEY')
-#     payapp_val = os.getenv('PAYAPP_API_VALUE')
-
-#     if request.method == 'POST':
-#         if (payapp_userid == request.form.get('userid')) and (payapp_key == request.form.get('linkkey')) and (payapp_val == request.form.get('linkval')):
-#             # 결제완료 상태일 경우
-#             if request.form.get('pay_state') == '4':
-                
-#                 product = request.form.get('goodname')
-#                 mobile = request.form.get('recvphone')
-#                 price = int(request.form.get('price'))
-#                 mul_no = int(request.form.get('mul_no'))
-
-#                 mobile_hash = hashlib.sha512(mobile.encode()).hexdigest()
-
-#                 response = supabase.table('orders').upsert([
-#                     {
-#                         'product': product,
-#                         'mobile': mobile_hash,
-#                         'price': price,
-#                         'mul_no': mul_no
-#                     }
-#                 ]).execute()
-#                 print(response)
-#                 if response.error:
-#                     return jsonify({'error': 'Failed to insert data into orders table'}), 500
-
-#                 response = make_response('SUCCESS', 200)
-#                 return response
 
 
 if __name__ == '__main__':
