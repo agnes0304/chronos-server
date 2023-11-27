@@ -154,14 +154,18 @@ def create_order():
 def admin_login():
     data = request.get_json()
     response = supabase.table("users").select("*").eq("email", data['email']).execute().data
-    if response.data[0].get('role') == 1:
+    if response[0].get('role') == 1:
         return jsonify({'message': "success"})
     return jsonify({'message': "failed"})
 
 
-# ### 📌 입금확인 대기중인 주문 내역 조회
-# # TODO: confirmed가 false인 데이터만 조회
-# @app.route('/queue', methods=['GET'])
+### 📌 입금확인 대기중인 주문 내역 조회
+# TODO: confirmed가 false인 데이터만 조회
+@app.route('/queue', methods=['GET'])
+def get_queue():
+    response = supabase.table("orders").select("*").eq("isConfirm", False).execute().data
+    print(response)
+    return jsonify(response)
 
 
 # ### 📌 입금확인
