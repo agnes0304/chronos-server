@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import boto3
 import json
 from supabase import create_client, Client
+from flask_mail import Mail, Message
 
 from botocore.config import Config
 
@@ -22,6 +23,7 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
 
 # S3 presigned url 생성 함수
 def create_presigned_url(files, expiration=86400):
@@ -179,9 +181,26 @@ def confirm_order(order_id):
 
 
 
-# ### 📌 판매자에게 입금확인 요청 이메일 전송
-# # TODO: AWS SES 사용
-# @app.route('/email', methods=['POST'])
+### 📌 판매자에게 입금확인 요청 이메일 전송
+# TODO: AWS SES 사용
+### 📌 이메일 전송
+# flask-mail 사용
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = os.getenv('GMAIL')
+app.config['MAIL_PASSWORD'] = os.getenv('GMAIL_APP_PASSWORD') 
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
+mail = Mail(app)
+
+@app.route('/email', methods=['GET'])
+def sendemail():
+    msg = Message('Hello', sender=app.config.MAIL_USERNAME, recipients=['jiwoochoi0304@gmail.com'])
+    msg.body = 'Hello Flask'
+    mail.send(msg)
+    return jsonify({'message': "sent"})
 
 
 if __name__ == '__main__':
