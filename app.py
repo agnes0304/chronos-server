@@ -185,12 +185,10 @@ def confirm_order(order_id):
     return jsonify({'message': "Update Failed"})
 
 
-
 ### 📍 판매자에게 입금확인 요청 이메일 전송
-### *가능하면 구매자에게도 입금 확인 이메일 전송하게끔. 
 @app.route('/email', methods=['GET'])
 def sendemail():
-    
+
     CHARSET = "UTF-8"
     SENDER = f"필기깎는화석 <{AWS_SES_SENDER}>"
     RECIPIENT = ADMIN_RECIPENT
@@ -208,6 +206,82 @@ def sendemail():
     <a href={ADMIN_URL}>관리자 페이지</a>
     <a href={ORDER_URL}>
       입금확인 대기 리스트</a>.</p>
+</body>
+</html>
+            """            
+
+    client = boto3.client('ses',region_name=AWS_REGION)
+    try:
+        response = client.send_email(
+            Destination={
+                'ToAddresses': [
+                    RECIPIENT,
+                ],
+            },
+            Message={
+                'Body': {
+                    'Html': {
+                        'Charset': CHARSET,
+                        'Data': BODY_HTML,
+                    },
+                    'Text': {
+                        'Charset': CHARSET,
+                        'Data': BODY_TEXT,
+                    },
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': SUBJECT,
+                },
+            },
+            Source=SENDER,
+        )
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+        return jsonify({'message': "failed"})
+    else:
+        print("Email sent! Message ID:"),
+        print(response['MessageId'])
+        return jsonify({'message': "sent"})
+    
+
+### 📍 구매자에게 입금확인 이메일 전송
+@app.route('/email/<string:email>', methods=['GET'])
+def sendemail(email):
+
+    CHARSET = "UTF-8"
+    SENDER = f"필기깎는화석 <{AWS_SES_SENDER}>"
+    RECIPIENT = email
+    AWS_REGION = "ap-northeast-2"
+    SUBJECT = "[필기깎는화석] 자료 다운로드가 가능해요!"
+    BODY_TEXT = ("안녕하세요 화석입니다.\r\n"
+                "올인원 한국사 연표 필기노트를 구매해주셔서 감사합니다.\n"
+                "필기노트 원본의 용량이 커서 받으시는 분들의 네트워크 상황에 따라 다운로드가 원활하지 않은 경우가 종종 발생합니다.\n"
+                "하여 기존 원본을 파트 별로 나누어 다운로드가 가능하게끔 만들었어요.\n"
+                "자료 순서는 '연표-빈칸-플러스,부록-필기노트' 순서입니다.\n"
+                "준비하시는 일들, 원하시는 결과와 함께 잘 마무리할 수 있는 2023년 한 해 되시길 바랍니다.\n"
+                "*참고: PDF라는 파일의 특성상 환불이 어려운 점 양해부탁드립니다.\n"
+                "다운로드 받기\n"
+                "필기깎는화석 홈\n"
+                )        
+    BODY_HTML = """<html>
+<head></head>
+<body>
+  <h1>안녕하세요 화석입니다.</h1>
+  <article>
+    <p>올인원 한국사 연표 필기노트를 구매해주셔서 감사합니다.<p>
+    <p>필기노트 원본의 용량이 커서 받으시는 분들의 네트워크 상황에 따라 다운로드가 원활하지 않은 경우가 종종 발생합니다.<p>
+    <p>하여 기존 원본을 파트 별로 나누어 다운로드가 가능하게끔 만들었어요.<p>
+    <p>자료 순서는 '연표-빈칸-플러스,부록-필기노트' 순서입니다.<p>
+    <p>준비하시는 일들, 원하시는 결과와 함께 잘 마무리할 수 있는 2023년 한 해 되시길 바랍니다.<p>
+    <p>*참고: PDF라는 파일의 특성상 환불이 어려운 점 양해부탁드립니다.<p>
+    <p>
+        <a href='https://chronos.jiwoo.best/payment/success'>다운로드 받기</a>
+    </p>
+    <p>
+        <a href='https://chronos.jiwoo.best'>필기깎는화석 홈</a>
+    </p>
+  </article>
 </body>
 </html>
             """            
