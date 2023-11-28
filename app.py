@@ -1,28 +1,26 @@
 import os
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import ClientError
-# import json
 from supabase import create_client, Client
-# from flask_mail import Mail, Message
 from botocore.config import Config
 
-# ⚙️ ENV
+### ⚙️ ENV
 load_dotenv()
 
-# ⚙️ S3 BUCKET CONFIG
+### ⚙️ S3 BUCKET CONFIG
 my_config = Config(
     signature_version = 'v4',
 )
 
-# ⚙️ SUPABASE ACCESS
+### ⚙️ SUPABASE ACCESS
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ⚙️ AWS SES
+### ⚙️ AWS SES
 AWS_SES_SENDER = os.getenv('SENDER_EMAIL')
 ADMIN_RECIPENT = os.getenv('ADMIN_EMAIL')
 ADMIN_URL = os.getenv('ADMIN_URL')
@@ -180,14 +178,14 @@ def get_queue():
 def confirm_order(order_id):
     response = supabase.table("orders").update({"isConfirm": True}).eq("id", order_id).execute()
     if response.data[0]:
-        return jsonify({'message': response.data[0]})
+        return jsonify({'message': "success"})
 
-    return jsonify({'message': "Update Failed"})
+    return jsonify({'message': "상태 업데이트에 실패했습니다."})
 
 
 ### 📍 판매자에게 입금확인 요청 이메일 전송
 @app.route('/email', methods=['GET'])
-def sendemail():
+def sendemail_admin():
 
     CHARSET = "UTF-8"
     SENDER = f"필기깎는화석 <{AWS_SES_SENDER}>"
@@ -247,7 +245,7 @@ def sendemail():
 
 ### 📍 구매자에게 입금확인 이메일 전송
 @app.route('/email/<string:email>', methods=['GET'])
-def sendemail(email):
+def sendemail_user(email):
 
     CHARSET = "UTF-8"
     SENDER = f"필기깎는화석 <{AWS_SES_SENDER}>"
@@ -255,31 +253,31 @@ def sendemail(email):
     AWS_REGION = "ap-northeast-2"
     SUBJECT = "[필기깎는화석] 자료 다운로드가 가능해요!"
     BODY_TEXT = ("안녕하세요 화석입니다.\r\n"
-                "올인원 한국사 연표 필기노트를 구매해주셔서 감사합니다.\n"
+                "올인원 한국사 연표 필기노트를 구매해주셔서 감사합니다😊.\n"
                 "필기노트 원본의 용량이 커서 받으시는 분들의 네트워크 상황에 따라 다운로드가 원활하지 않은 경우가 종종 발생합니다.\n"
-                "하여 기존 원본을 파트 별로 나누어 다운로드가 가능하게끔 만들었어요.\n"
+                "하여 기존 원본을 파트 별로 나누어 다운로드가 가능하게끔 만들었어요!\n"
                 "자료 순서는 '연표-빈칸-플러스,부록-필기노트' 순서입니다.\n"
                 "준비하시는 일들, 원하시는 결과와 함께 잘 마무리할 수 있는 2023년 한 해 되시길 바랍니다.\n"
                 "*참고: PDF라는 파일의 특성상 환불이 어려운 점 양해부탁드립니다.\n"
-                "다운로드 받기\n"
-                "필기깎는화석 홈\n"
+                "🔗 다운로드 받기\n"
+                "🏠 필기깎는화석 홈으로\n"
                 )        
     BODY_HTML = """<html>
 <head></head>
 <body>
   <h1>안녕하세요 화석입니다.</h1>
   <article>
-    <p>올인원 한국사 연표 필기노트를 구매해주셔서 감사합니다.<p>
+    <p>올인원 한국사 연표 필기노트를 구매해주셔서 감사합니다😊.<p>
     <p>필기노트 원본의 용량이 커서 받으시는 분들의 네트워크 상황에 따라 다운로드가 원활하지 않은 경우가 종종 발생합니다.<p>
-    <p>하여 기존 원본을 파트 별로 나누어 다운로드가 가능하게끔 만들었어요.<p>
+    <p>하여 기존 원본을 파트 별로 나누어 다운로드가 가능하게끔 만들었어요!<p>
     <p>자료 순서는 '연표-빈칸-플러스,부록-필기노트' 순서입니다.<p>
     <p>준비하시는 일들, 원하시는 결과와 함께 잘 마무리할 수 있는 2023년 한 해 되시길 바랍니다.<p>
     <p>*참고: PDF라는 파일의 특성상 환불이 어려운 점 양해부탁드립니다.<p>
-    <p>
+    <p>🔗 
         <a href='https://chronos.jiwoo.best/payment/success'>다운로드 받기</a>
     </p>
-    <p>
-        <a href='https://chronos.jiwoo.best'>필기깎는화석 홈</a>
+    <p>🏠 
+        <a href='https://chronos.jiwoo.best'>필기깎는화석 홈으로</a>
     </p>
   </article>
 </body>
@@ -319,26 +317,6 @@ def sendemail(email):
         print("Email sent! Message ID:"),
         print(response['MessageId'])
         return jsonify({'message': "sent"})
-
-
-### 📍 이메일 전송
-# flask-mail 사용
-
-# app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-# app.config['MAIL_PORT'] = 465
-# app.config['MAIL_USERNAME'] = os.getenv('GMAIL')
-# app.config['MAIL_PASSWORD'] = os.getenv('GMAIL_APP_PASSWORD') 
-# app.config['MAIL_USE_TLS'] = False
-# app.config['MAIL_USE_SSL'] = True
-
-# mail = Mail(app)
-
-# @app.route('/email', methods=['GET'])
-# def sendemail():
-#     msg = Message('Hello', sender=app.config.MAIL_USERNAME, recipients=['jiwoochoi0304@gmail.com'])
-#     msg.body = 'Hello Flask'
-#     mail.send(msg)
-#     return jsonify({'message': "sent"})
 
 
 if __name__ == '__main__':
