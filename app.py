@@ -119,9 +119,10 @@ def get_words():
 ### 📍 전체 데이터 조회
 @app.route('/posts', methods=['GET'])
 def get_posts():
-    search_terms = request.args.get('search').split(" ")
+    # search_terms = request.args.get('search').split(" ")
+    search_terms = request.args.get('search')
     if search_terms:
-        search_query = ' | '.join(search_terms)
+        search_query = ' | '.join(search_terms.split(" "))
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
         return response
     else:
