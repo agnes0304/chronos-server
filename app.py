@@ -359,13 +359,14 @@ def sendemail_user(email):
 ### 📍 깃허브 로그인
 @app.route('/signin/github')
 def signin_with_github():
-    # host_url = os.getenv("HOST_URL")
+    host_url = os.getenv("HOST_URL")
     res = supabase.auth.sign_in_with_oauth(
         {
             "provider": "github",
             "options": {
-                # "redirect_to": f"{host_url}/callback"
-                "redirect_to": f"{request.host_url}/callback"
+                "redirect_to": f"{host_url}/callback"
+                # "redirect_to": f"{request.host_url}/callback" 
+                # "redirect_to": f"{request.host_url}callback" -> 원래 문서에 있는 버전
             },
         }
     )
