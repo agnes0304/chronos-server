@@ -360,17 +360,23 @@ def sendemail_user(email):
 @app.route('/signin/github')
 def signin_with_github():
     # host_url = os.getenv("HOST_URL")
-    res = supabase.auth.sign_in_with_oauth(
-        {
-            "provider": "github",
-            "options": {
-                # "redirect_to": f"{host_url}/callback"
-                # "redirect_to": f"{request.host_url}/callback"
-                "redirect_to": f"{request.host_url}callback" 
-            },
+    # res = supabase.auth.sign_in_with_oauth(
+    #     {
+    #         "provider": "github",
+    #         "options": {
+    #             # "redirect_to": f"{host_url}/callback"
+    #             # "redirect_to": f"{request.host_url}/callback"
+    #             "redirect_to": f"{request.host_url}callback" 
+    #         },
+    #     }
+    # )
+    # return redirect(res.url)
+    data = supabase.auth.sign_in_with_oauth({
+        "provider": 'github',
+        'options': {
+            'redirect_to': "https://chronos.fly.dev/callback"
         }
-    )
-    return redirect(res.url)
+    })
 
 
 ### 📍 깃허브 로그인 콜백
