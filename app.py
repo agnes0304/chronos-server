@@ -365,7 +365,7 @@ def signin_with_github():
             "provider": "github",
             "options": {
                 # "redirect_to": f"{host_url}/callback"
-                "redirect_to": f"{host_url}callback"
+                "redirect_to": f"{request.host_url}callback"
             },
         }
     )
