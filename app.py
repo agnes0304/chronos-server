@@ -360,7 +360,6 @@ def sendemail_user(email):
 @app.route('/signin/github')
 def signin_with_github():
     host_url = os.getenv("HOST_URL")
-    # host_url = os.getenv("HOST_LOCAL_URL")
     res = supabase.auth.sign_in_with_oauth(
         {
             "provider": "github",
