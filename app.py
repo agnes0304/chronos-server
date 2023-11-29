@@ -1,14 +1,34 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session, redirect, g
 from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import ClientError
 from supabase import create_client, Client
+from supabase.client import ClientOptions
 from botocore.config import Config
+from gotrue import SyncSupportedStorage
+from werkzeug.local import LocalProxy
 
 ### ⚙️ ENV
 load_dotenv()
+
+
+### ⚙️ FLASK SESSION STORAGE FOR SUPABASE
+class FlaskSessionStorage(SyncSupportedStorage):
+    def __init__(self):
+        self.storage = session
+
+    def get_item(self, key: str) -> str | None:
+        if key in self.storage:
+            return self.storage[key]
+
+    def set_item(self, key: str, value: str) -> None:
+        self.storage[key] = value
+
+    def remove_item(self, key: str) -> None:
+        if key in self.storage:
+            self.storage.pop(key, None)
 
 ### ⚙️ S3 BUCKET CONFIG
 my_config = Config(
@@ -19,6 +39,19 @@ my_config = Config(
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+### ⚙️ SUPABASE
+def get_supabase() -> Client:
+    if "supabase" not in g:
+        g.supabase = create_client(
+            SUPABASE_URL,
+            SUPABASE_KEY,
+            options=ClientOptions(storage=FlaskSessionStorage(),flow_type="pkce"),
+        )
+    return g.supabase
+
+supabase: Client = LocalProxy(get_supabase)
+
 
 ### ⚙️ AWS SES
 AWS_SES_SENDER = os.getenv('SENDER_EMAIL')
@@ -319,6 +352,35 @@ def sendemail_user(email):
         return jsonify({'message': "sent"})
 
 
+### 📍 깃허브 로그인
+@app.route('/signin/github')
+def signin_with_github():
+    host_url = os.getenv("HOST_URL")
+    # host_url = os.getenv("HOST_LOCAL_URL")
+    res = supabase.auth.sign_in_with_oauth(
+        {
+            "provider": "github",
+            "options": {
+                "redirect_to": f"{host_url}/callback"
+            },
+        }
+    )
+    return redirect(res.url)
+
+
+### 📍 깃허브 로그인 콜백
+@app.route("/callback")
+def callback():
+    code = request.args.get("code")
+    next = request.args.get("next", "/")
+
+    if code:
+        res = supabase.auth.exchange_code_for_session({"auth_code": code})
+
+    return redirect(next)
+
+
 if __name__ == '__main__':
+    # app.secret_key = os.getenv('FLASK_SECRET_KEY', 'a_secret_key')
     app.debug = True
     app.run(port=5000)
