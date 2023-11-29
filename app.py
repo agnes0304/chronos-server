@@ -14,7 +14,7 @@ from werkzeug.local import LocalProxy
 load_dotenv()
 
 
-### ⚙️ FLASK SESSION STORAGE FOR SUPABASE
+### ⚙️ FLASK SESSION STORAGE FOR SUPABASE (FOR GITHUB OAUTH)
 class FlaskSessionStorage(SyncSupportedStorage):
     def __init__(self):
         self.storage = session
@@ -41,7 +41,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 # supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-### ⚙️ SUPABASE
+### ⚙️ SUPABASE CONFIG (FOR GITHUB OAUTH)
 def get_supabase() -> Client:
     if "supabase" not in g:
         g.supabase = create_client(
