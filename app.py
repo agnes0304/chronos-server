@@ -30,6 +30,7 @@ class FlaskSessionStorage(SyncSupportedStorage):
         if key in self.storage:
             self.storage.pop(key, None)
 
+
 ### ⚙️ S3 BUCKET CONFIG
 my_config = Config(
     signature_version = 'v4',
@@ -38,7 +39,7 @@ my_config = Config(
 ### ⚙️ SUPABASE ACCESS
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 ### ⚙️ SUPABASE
 def get_supabase() -> Client:
