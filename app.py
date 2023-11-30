@@ -4,8 +4,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import ClientError
-from supabase import create_client, Client
-from supabase.client import ClientOptions
+from supabase import create_client
+from supabase.client import Client, ClientOptions
 from botocore.config import Config
 from gotrue import SyncSupportedStorage
 from werkzeug.local import LocalProxy
@@ -37,16 +37,21 @@ my_config = Config(
 )
 
 ### ⚙️ SUPABASE ACCESS
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+supabase_url = os.environ.get("SUPABASE_URL", "")
+supabase_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+# SUPABASE_URL = os.getenv("SUPABASE_URL")
+# SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 # supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 ### ⚙️ SUPABASE CONFIG (FOR GITHUB OAUTH)
 def get_supabase() -> Client:
     if "supabase" not in g:
         g.supabase = create_client(
-            SUPABASE_URL,
-            SUPABASE_KEY,
+            # SUPABASE_URL,
+            # SUPABASE_KEY,
+            supabase_url,
+            supabase_key,
             options=ClientOptions(storage=FlaskSessionStorage(),flow_type="pkce"),
         )
     return g.supabase
@@ -357,38 +362,31 @@ def sendemail_user(email):
 
 
 ### 📍 깃허브 로그인
-@app.route('/signin/github')
+@app.route("/signin/github")
 def signin_with_github():
-    # host_url = os.getenv("HOST_URL")
-    # res = supabase.auth.sign_in_with_oauth(
-    #     {
-    #         "provider": "github",
-    #         "options": {
-    #             # "redirect_to": f"{host_url}/callback"
-    #             # "redirect_to": f"{request.host_url}/callback"
-    #             "redirect_to": f"{request.host_url}callback" 
-    #         },
-    #     }
-    # )
-    # return redirect(res.url)
-    data = supabase.auth.sign_in_with_oauth({
-        "provider": 'github',
-        'options': {
-            'redirect_to': "https://chronos.fly.dev/callback"
+    res = supabase.auth.sign_in_with_oauth(
+        {
+            "provider": "github",
+            "options": {
+	            "redirect_to": f"{request.host_url}callback"
+	        },
         }
-    })
+    )
+    return redirect(res.url)
+
 
 
 ### 📍 깃허브 로그인 콜백
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
-    next = request.args.get("next", "/")
+    next = request.args.get("next", "/admin/order")
 
     if code:
         res = supabase.auth.exchange_code_for_session({"auth_code": code})
 
     return redirect(next)
+
 
 
 if __name__ == '__main__':
