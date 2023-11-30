@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
@@ -40,7 +40,7 @@ s3_client = boto3.client('s3',
 
 
 app = Flask(__name__)
-CORS(app, resources={r'/*': {'origins': 'http://localhost:3000, https://chronos.jiwoo.best'}})
+CORS(app)
 
 
 ### ⚙️ FUNC: S3 presigned url 생성 함수
@@ -318,6 +318,25 @@ def sendemail_user(email):
         print(response['MessageId'])
         return jsonify({'message': "sent"})
 
+
+### 📍 oauth -> set refreshToken in httponly cookie
+@app.route('/set-refresh-token', methods=['POST'])
+def set_refresh_token():
+    refresh_token = request.json.get('refreshToken')
+    if not refresh_token:
+        return jsonify({'message': 'No refresh token provided'}), 400
+
+    response = make_response(jsonify({'message': 'Refresh token set in HTTP-only cookie.'}))
+    response.set_cookie('refreshToken', refresh_token, httponly=True, secure=True, samesite='Strict', max_age=24*60*60)
+    return response
+
+
+### 📍 oauth -> remove refreshToken
+@app.route('/clear-refresh-token', methods=['POST'])
+def clear_refresh_token():
+    response = make_response(jsonify({'message': 'Refresh token removed from HTTP-only cookie.'}))
+    response.delete_cookie('refreshToken', httponly=True, secure=True, samesite='Strict')
+    return response
 
 
 
