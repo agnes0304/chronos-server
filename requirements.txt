@@ -5,5 +5,3 @@ boto3
 supabase
 flask-cors
 requests
-gotrue
-werkzeug

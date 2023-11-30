@@ -1,34 +1,15 @@
 import os
-from flask import Flask, jsonify, request, session, redirect, g
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import ClientError
 from supabase import create_client
-from supabase.client import Client, ClientOptions
+from supabase.client import Client
 from botocore.config import Config
-from gotrue import SyncSupportedStorage
-from werkzeug.local import LocalProxy
 
 ### ⚙️ ENV
 load_dotenv()
-
-
-### ⚙️ FLASK SESSION STORAGE FOR SUPABASE (FOR GITHUB OAUTH)
-class FlaskSessionStorage(SyncSupportedStorage):
-    def __init__(self):
-        self.storage = session
-
-    def get_item(self, key: str) -> str | None:
-        if key in self.storage:
-            return self.storage[key]
-
-    def set_item(self, key: str, value: str) -> None:
-        self.storage[key] = value
-
-    def remove_item(self, key: str) -> None:
-        if key in self.storage:
-            self.storage.pop(key, None)
 
 
 ### ⚙️ S3 BUCKET CONFIG
@@ -37,26 +18,9 @@ my_config = Config(
 )
 
 ### ⚙️ SUPABASE ACCESS
-
-supabase_url = os.environ.get("SUPABASE_URL", "")
-supabase_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
-# SUPABASE_URL = os.getenv("SUPABASE_URL")
-# SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-### ⚙️ SUPABASE CONFIG (FOR GITHUB OAUTH)
-def get_supabase() -> Client:
-    if "supabase" not in g:
-        g.supabase = create_client(
-            # SUPABASE_URL,
-            # SUPABASE_KEY,
-            supabase_url,
-            supabase_key,
-            options=ClientOptions(storage=FlaskSessionStorage(),flow_type="pkce"),
-        )
-    return g.supabase
-
-supabase: Client = LocalProxy(get_supabase)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 ### ⚙️ AWS SES
@@ -66,20 +30,21 @@ ADMIN_URL = os.getenv('ADMIN_URL')
 ORDER_URL = os.getenv('ORDER_URL')
 
 
+### ⚙️ AWS S3 CLIENT
+s3_client = boto3.client('s3',
+                         config=my_config,
+                         region_name='ap-northeast-2',
+                         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+                         )
+
+
 app = Flask(__name__)
-app.secret_key = 'JIWOO_SECRET_KEY'
 CORS(app, resources={r'/*': {'origins': 'http://localhost:3000, https://chronos.jiwoo.best'}})
 
 
 ### ⚙️ FUNC: S3 presigned url 생성 함수
 def create_presigned_url(files, expiration=86400):
-    s3_client = boto3.client('s3',
-                             config=my_config,
-                             region_name='ap-northeast-2',
-                             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-                             aws_secret_access_key=os.getenv(
-                                 "AWS_SECRET_ACCESS_KEY")
-                            )
     bucket_name = os.getenv("S3_PRIVATE_BUCKET")
 
     if isinstance(files, list):
@@ -148,14 +113,6 @@ def get_post(post_id):
 ### 📍 무료 자료 다운로드 링크 생성
 @app.route('/download/<string:file_name>', methods=['GET'])
 def get_download_link(file_name):
-    s3_client = boto3.client('s3',
-                             config=my_config,
-                             region_name='ap-northeast-2',
-                             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-                             aws_secret_access_key=os.getenv(
-                                 "AWS_SECRET_ACCESS_KEY")
-                             )
-
     bucket_name = os.getenv("S3_BUCKET")
     params = {'Bucket': bucket_name, 'Key': file_name}
 
@@ -361,32 +318,6 @@ def sendemail_user(email):
         print(response['MessageId'])
         return jsonify({'message': "sent"})
 
-
-### 📍 깃허브 로그인
-@app.route("/signin/github")
-def signin_with_github():
-    res = supabase.auth.sign_in_with_oauth(
-        {
-            "provider": "github",
-            "options": {
-	            "redirect_to": f"{request.host_url}callback"
-	        },
-        }
-    )
-    return redirect(res.url)
-
-
-
-### 📍 깃허브 로그인 콜백
-@app.route("/callback")
-def callback():
-    code = request.args.get("code")
-    next = request.args.get("next", "/admin/order")
-
-    if code:
-        res = supabase.auth.exchange_code_for_session({"auth_code": code})
-
-    return redirect(next)
 
 
 
