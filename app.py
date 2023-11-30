@@ -319,25 +319,29 @@ def sendemail_user(email):
         return jsonify({'message': "sent"})
 
 
-### 📍 oauth -> set refreshToken in httponly cookie
-@app.route('/set-refresh-token', methods=['POST'])
-def set_refresh_token():
-    refresh_token = request.json.get('refreshToken')
-    if not refresh_token:
-        return jsonify({'message': 'No refresh token provided'}), 400
+### 📍 oauth -> get token from client
+@app.route('/send-token', methods=['POST'])
+def get_token():
+    data = request.get_json()
+    token = data['token']
+    if(token):
+        return jsonify({'message': "success"})
+    insert_data(token)
+    return jsonify({'message': "failed"})
 
-    response = make_response(jsonify({'message': 'Refresh token set in HTTP-only cookie.'}))
-    response.set_cookie('refreshToken', refresh_token, httponly=True, secure=True, samesite='Strict', max_age=24*60*60)
-    return response
 
-
-### 📍 oauth -> remove refreshToken
-@app.route('/clear-refresh-token', methods=['POST'])
-def clear_refresh_token():
-    response = make_response(jsonify({'message': 'Refresh token removed from HTTP-only cookie.'}))
-    response.delete_cookie('refreshToken', httponly=True, secure=True, samesite='Strict')
-    return response
-
+### insert data to supabase
+# users테이블의 uid에 token의 user의 id, email에는 token의 user의 email을 넣는다.
+def insert_data(token):
+    data = {
+        "uid": token['user']['id'],
+        "email": token['user']['email'],
+        "role": 0
+    }
+    response = supabase.table("users").insert(data).execute()
+    if response.data[0]:
+        return jsonify({'message': response.data[0]})
+    return jsonify({'message': "Insert Failed"})
 
 
 if __name__ == '__main__':
