@@ -67,7 +67,8 @@ ORDER_URL = os.getenv('ORDER_URL')
 
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = 'JIWOO_SECRET_KEY'
+CORS(app, resources={r'/*': {'origins': 'http://localhost:3000, https://chronos.jiwoo.best'}})
 
 
 ### ⚙️ FUNC: S3 presigned url 생성 함수
@@ -390,6 +391,5 @@ def callback():
 
 
 if __name__ == '__main__':
-    # app.secret_key = os.getenv('FLASK_SECRET_KEY', 'a_secret_key')
     app.debug = True
     app.run(port=5000)
