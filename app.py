@@ -89,12 +89,9 @@ def get_words():
 
 ### 📍 전체 데이터 조회
 @app.route('/posts', methods=['GET'])
-def get_posts():
-    # search_terms = request.args.get('search').split(" ") -> get 실패가능.  
+def get_posts():  
     search_terms = request.args.get('search')
-    print("지우1", search_terms)
     if search_terms:
-        print("지우2", search_terms)
         search_query = ' | '.join(search_terms.split(" "))
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
         return response
@@ -333,6 +330,11 @@ def get_token():
 ### insert data to supabase
 # users테이블의 uid에 token의 user의 id, email에는 token의 user의 email을 넣는다.
 def insert_data(token):
+    # 중복 체크
+    response = supabase.table("users").select("*").eq("uid", token['user']['id']).execute().data
+    if response:
+        return jsonify({'message': "already exists"})
+    
     data = {
         "uid": token['user']['id'],
         "email": token['user']['email'],
