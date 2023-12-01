@@ -319,8 +319,8 @@ def sendemail_user(email):
 ### 📍 oauth -> get token from client
 @app.route('/send-token', methods=['POST'])
 def get_token():
-    data = request.get_json()
-    token = data['token']
+    data = request.get_json() # {session: Session}
+    token = data['session']
     if(token):
         return jsonify({'message': "success"})
     insert_data(token)
