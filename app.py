@@ -330,7 +330,7 @@ def get_user_data():
 ### insert data to supabase
 def insert_data(userData):
     # 중복 체크
-    response = supabase.table("users").select("*").eq("uid", userData['userEmail']).execute().data
+    response = supabase.table("users").select("*").eq("email", userData['userEmail']).execute().data
     if response:
         # return jsonify({'message': "already exists"})
         return jsonify({'message': 2})
