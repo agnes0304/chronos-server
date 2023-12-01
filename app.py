@@ -336,6 +336,7 @@ def insert_data(userData):
         return jsonify({'message': 2})
     
     data = {
+        "id": userData['userId'],
         "email": userData['userEmail'],
     }
     response = supabase.table("users").insert(data).execute()
