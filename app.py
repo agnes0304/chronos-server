@@ -316,28 +316,26 @@ def sendemail_user(email):
         return jsonify({'message': "sent"})
 
 
-### 📍 oauth -> get token from client
-@app.route('/send-token', methods=['POST'])
+### 📍 oauth -> get user data from client
+@app.route('/send-user-data', methods=['POST'])
 def get_token():
-    data = request.get_json() # {session: Session}
-    token = data['session']
-    if(token):
+    user = request.get_json() # { user }
+    if(user.id):
         return jsonify({'message': "success"})
-    insert_data(token)
+    insert_data(user)
     return jsonify({'message': "failed"})
 
 
 ### insert data to supabase
-# users테이블의 uid에 token의 user의 id, email에는 token의 user의 email을 넣는다.
-def insert_data(token):
+def insert_data(userData):
     # 중복 체크
-    response = supabase.table("users").select("*").eq("uid", token['user']['id']).execute().data
+    response = supabase.table("users").select("*").eq("uid", userData['id']).execute().data
     if response:
         return jsonify({'message': "already exists"})
     
     data = {
-        "uid": token['user']['id'],
-        "email": token['user']['email'],
+        "uid": userData['id'],
+        "email": userData['email'],
         "role": 0
     }
     response = supabase.table("users").insert(data).execute()
