@@ -318,12 +318,13 @@ def sendemail_user(email):
 
 ### 📍 oauth -> get user data from client
 @app.route('/send-user-data', methods=['POST'])
-def get_token():
+def get_user_data():
     user = request.get_json() # { user }
-    if(user.userId):
-        return jsonify({'message': "success"})
-    insert_data(user)
-    return jsonify({'message': "failed"})
+    if not user['userId']:
+        return jsonify({'message': 0})
+        # return jsonify({'message': "failed"})
+    insert_result = insert_data(user)
+    return insert_result
 
 
 ### insert data to supabase
@@ -331,7 +332,8 @@ def insert_data(userData):
     # 중복 체크
     response = supabase.table("users").select("*").eq("uid", userData['userId']).execute().data
     if response:
-        return jsonify({'message': "already exists"})
+        # return jsonify({'message': "already exists"})
+        return jsonify({'message': 2})
     
     data = {
         "uid": userData['userId'],
@@ -341,7 +343,7 @@ def insert_data(userData):
     response = supabase.table("users").insert(data).execute()
     if response.data[0]:
         return jsonify({'message': response.data[0]})
-    return jsonify({'message': "Insert Failed"})
+    return jsonify({'message': 1})
 
 
 if __name__ == '__main__':
