@@ -320,7 +320,7 @@ def sendemail_user(email):
 @app.route('/send-user-data', methods=['POST'])
 def get_user_data():
     user = request.get_json() # { user }
-    if not user['userId']:
+    if not user['userEmail']:
         return jsonify({'message': 0})
         # return jsonify({'message': "failed"})
     insert_result = insert_data(user)
@@ -330,15 +330,13 @@ def get_user_data():
 ### insert data to supabase
 def insert_data(userData):
     # 중복 체크
-    response = supabase.table("users").select("*").eq("uid", userData['userId']).execute().data
+    response = supabase.table("users").select("*").eq("uid", userData['userEmail']).execute().data
     if response:
         # return jsonify({'message': "already exists"})
         return jsonify({'message': 2})
     
     data = {
-        "uid": userData['userId'],
         "email": userData['userEmail'],
-        "role": 0
     }
     response = supabase.table("users").insert(data).execute()
     if response.data[0]:
