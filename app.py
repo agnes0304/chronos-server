@@ -88,12 +88,16 @@ def get_words():
 
 
 ### 📍 전체 데이터 조회
+# TODO: 자동완성에 없는 검색어 넣을 시 에러 -> 빈 [] 리턴
 @app.route('/posts', methods=['GET'])
 def get_posts():  
     search_terms = request.args.get('search')
     if search_terms:
         search_query = ' | '.join(search_terms.split(" "))
         response = supabase.rpc("search_word", {'search_term': search_query}).execute().data
+        # null인 경우 빈 [] 리턴
+        if not response:
+            return jsonify([])
         return response
     else:
         response = supabase.table("files").select("*").execute().data
