@@ -118,7 +118,6 @@ def update_post(post_id):
     response = supabase.table("files").update(data).eq("id", post_id).execute()
     if response.data[0]:
         return jsonify({'result': response.data[0], 'status': '200', 'message': 'success'})
-
     return jsonify({'status': '400'})
 
 
