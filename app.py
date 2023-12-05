@@ -133,6 +133,37 @@ def get_post_for_edit(post_id):
     return jsonify(data[0] if data else {})
 
 
+### 📍 개별 포스트 생성 페이지 -> priceOptions 조회
+@app.route('/posts/create', methods=['GET'])
+def get_price():
+    price = supabase.table("products").select("*").execute().data
+    priceOptions = []
+    for i in range(len(price)):
+        priceOptionName = price[i]['name']
+        priceOptionPrice = price[i]['price']
+        priceOptions.append({'option': [priceOptionName, priceOptionPrice]}) 
+    
+    return jsonify(priceOptions)
+
+
+### 📍 개별 포스트 생성
+@app.route('/posts/create', methods=['POST'])
+def create_post():
+    data = request.get_json()
+    
+    # 아직은 미정
+    if data['isPaid'] == 'true':
+        data['isPaid'] = True
+    else:
+        data['isPaid'] = False
+    
+    response = supabase.table("files").insert(data).execute()
+
+    if response.data[0]:
+        return jsonify({'result': response.data[0], 'status': '200', 'message': 'success'})
+    return jsonify({'status': '400'})
+
+
 ### 📍 개별 포스트 수정
 @app.route('/posts/<int:post_id>', methods=['PUT'])
 def update_post(post_id):
@@ -148,6 +179,12 @@ def update_post(post_id):
     if response.data[0]:
         return jsonify({'result': response.data[0], 'status': '200', 'message': 'success'})
     return jsonify({'status': '400'})
+
+
+### 📍 개별 포스트 삭제
+
+
+### 📍 상품 등록
 
 
 ### 📍 무료 자료 다운로드 링크 생성
