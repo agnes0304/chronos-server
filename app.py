@@ -111,6 +111,17 @@ def get_post(post_id):
     return jsonify(data[0] if data else {})
 
 
+### 📍 개별 포스트 수정
+@app.route('/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    data = request.get_json()
+    response = supabase.table("files").update(data).eq("id", post_id).execute()
+    if response.data[0]:
+        return jsonify({'message': response.data[0]})
+
+    return jsonify({'status': '400'})
+
+
 ### 📍 무료 자료 다운로드 링크 생성
 @app.route('/download/<string:file_name>', methods=['GET'])
 def get_download_link(file_name):
