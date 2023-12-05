@@ -111,10 +111,39 @@ def get_post(post_id):
     return jsonify(data[0] if data else {})
 
 
+### 📍 개별 포스트 데이터 편집 페이지 조회(ID)
+@app.route('/posts/edit/<int:post_id>', methods=['GET'])
+def get_post_for_edit(post_id):
+    data = supabase.table("files").select("*").eq("id", post_id).execute().data
+
+    if not data:
+        return jsonify({})
+    
+    price = supabase.table("products").select("*").execute().data
+
+    priceOptions = []
+    for i in range(len(price)):
+        priceOptionName = price[i]['name']
+        priceOptionPrice = price[i]['price']
+        priceOptions.append({'option': [priceOptionName, priceOptionPrice]}) 
+    
+    data[0]['priceOptions'] = priceOptions
+    print(data[0])
+    
+    return jsonify(data[0] if data else {})
+
+
 ### 📍 개별 포스트 수정
 @app.route('/posts/<int:post_id>', methods=['PUT'])
 def update_post(post_id):
     data = request.get_json()
+
+    # isPaid가 true이면 True로 바꿔줌 false도 마찬가지
+    if data['isPaid'] == 'true':
+        data['isPaid'] = True
+    else:
+        data['isPaid'] = False
+
     response = supabase.table("files").update(data).eq("id", post_id).execute()
     if response.data[0]:
         return jsonify({'result': response.data[0], 'status': '200', 'message': 'success'})
