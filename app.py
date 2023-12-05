@@ -150,8 +150,6 @@ def get_price():
 @app.route('/posts/create', methods=['POST'])
 def create_post():
     data = request.get_json()
-    
-    # 아직은 미정
     if data['isPaid'] == 'true':
         data['isPaid'] = True
     else:
