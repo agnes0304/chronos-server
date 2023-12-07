@@ -7,6 +7,8 @@ from botocore.exceptions import ClientError
 from supabase import create_client
 from supabase.client import Client
 from botocore.config import Config
+from datetime import datetime, timedelta
+import pytz
 
 ### ⚙️ ENV
 load_dotenv()
@@ -211,12 +213,37 @@ def get_product(name):
 
 ### 📍 구매한 상품 url 조회
 # body로 hashedemail받아서 orders에 있는 모든 데이터 조회
-# confirm가 true인 데이터만 조회 -> DONE
 @app.route('/orders/<string:email>', methods=['GET'])
 def get_orders(email):
-    filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
-    response = create_presigned_url(filelist)
-    return jsonify(response)
+
+    clickedData = supabase.table("orders").select("clicked").eq("email", email).execute().data
+    # seoul_timezone = pytz.timezone("Asia/Seoul")
+    local_time = datetime.now() # Offset-naive datetime object
+
+    if clickedData[0]['clicked'] is not None:
+        # clicked_time = datetime.fromisoformat(clickedData[0]['clicked'])
+
+        clicked_time_str = clickedData[0]['clicked']
+        if '+' in clicked_time_str:
+            clicked_time_str = clicked_time_str.split('+')[0]
+        elif 'Z' in clicked_time_str:
+            clicked_time_str = clicked_time_str.replace('Z', '')
+        clicked_time_naive = datetime.fromisoformat(clicked_time_str)
+
+        if local_time - clicked_time_naive > timedelta(days=1):
+            print("expired")
+            return jsonify({'message': "expired"})
+        else:
+            filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
+            response = create_presigned_url(filelist)
+            print("success")
+            return jsonify(response, {'message': "success"})
+    else:
+        supabase.table("orders").update({"clicked": local_time.isoformat()}).eq("email", email).execute()
+        filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
+        response = create_presigned_url(filelist)
+        print("success")
+        return jsonify(response, {'message': "success"})
 
 
 ### 📍 입금확인 대기중인 주문 내역 생성
@@ -276,9 +303,7 @@ def sendemail_admin():
 <body>
   <h1>🚨 입금 확인 필요.</h1>
   <p>아래 링크로 가서 주문 내역을 확인해주세요🥳.
-    <a href="{ADMIN_URL}">관리자 페이지</a>
-    <a href="{ORDER_URL}">
-      입금확인 대기 리스트</a>.</p>
+    <a href="https://chronos.jiwoo.best/admin">관리자 페이지</a></p>
 </body>
 </html>
             """            
