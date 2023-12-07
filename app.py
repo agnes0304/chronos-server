@@ -276,8 +276,8 @@ def sendemail_admin():
 <body>
   <h1>🚨 입금 확인 필요.</h1>
   <p>아래 링크로 가서 주문 내역을 확인해주세요🥳.
-    <a href={ADMIN_URL}>관리자 페이지</a>
-    <a href={ORDER_URL}>
+    <a href="{ADMIN_URL}">관리자 페이지</a>
+    <a href="{ORDER_URL}">
       입금확인 대기 리스트</a>.</p>
 </body>
 </html>
