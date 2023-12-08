@@ -168,13 +168,6 @@ def create_post():
 @app.route('/posts/<int:post_id>', methods=['PUT'])
 def update_post(post_id):
     data = request.get_json()
-
-    # isPaid가 true이면 True로 바꿔줌 false도 마찬가지
-    if data['isPaid'] == 'true':
-        data['isPaid'] = True
-    else:
-        data['isPaid'] = False
-
     response = supabase.table("files").update(data).eq("id", post_id).execute()
     if response.data[0]:
         return jsonify({'result': response.data[0], 'status': '200', 'message': 'success'})
