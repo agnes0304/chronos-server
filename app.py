@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 import boto3
@@ -8,7 +8,6 @@ from supabase import create_client
 from supabase.client import Client
 from botocore.config import Config
 from datetime import datetime, timedelta
-import pytz
 
 ### ⚙️ ENV
 load_dotenv()
