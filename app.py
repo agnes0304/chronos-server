@@ -208,14 +208,14 @@ def get_product(name):
 @app.route('/orders/<string:email>', methods=['GET'])
 def get_orders(email):
 
-    clickedData = supabase.table("orders").select("clicked").eq("email", email).execute().data
+    clickedData = supabase.table("orders").select("clickedAt").eq("email", email).execute().data
     # seoul_timezone = pytz.timezone("Asia/Seoul")
     local_time = datetime.now() # Offset-naive datetime object
 
-    if clickedData[0]['clicked'] is not None:
-        # clicked_time = datetime.fromisoformat(clickedData[0]['clicked'])
+    if clickedData[0]['clickedAt'] is not None:
+        # clicked_time = datetime.fromisoformat(clickedData[0]['clickedAt'])
 
-        clicked_time_str = clickedData[0]['clicked']
+        clicked_time_str = clickedData[0]['clickedAt']
         if '+' in clicked_time_str:
             clicked_time_str = clicked_time_str.split('+')[0]
         elif 'Z' in clicked_time_str:
@@ -231,7 +231,7 @@ def get_orders(email):
             print("success")
             return jsonify(response, {'message': "success"})
     else:
-        supabase.table("orders").update({"clicked": local_time.isoformat()}).eq("email", email).execute()
+        supabase.table("orders").update({"clickedAt": local_time.isoformat()}).eq("email", email).execute()
         filelist = supabase.rpc("get_filenames_by_email", {'email': email}).execute().data
         response = create_presigned_url(filelist)
         print("success")
